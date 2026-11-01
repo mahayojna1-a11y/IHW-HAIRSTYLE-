@@ -1,5 +1,7 @@
 name: Build APK
 on: workflow_dispatch
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,7 +26,9 @@ jobs:
       - name: Build
         working-directory: proj
         run: gradle assembleDebug --no-daemon
-      - uses: actions/upload-artifact@v4
-        with:
-          name: apk
-          path: proj/app/build/outputs/apk/debug/*.apk
+      - name: Publish APK to Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp proj/app/build/outputs/apk/debug/app-debug.apk IHW-app.apk
+          gh release create v${{ github.run_number }} IHW-app.apk --repo ${{ github.repository }} --title "IHW APK ${{ github.run_number }}" --notes "Debug APK"
